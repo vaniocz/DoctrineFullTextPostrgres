@@ -60,7 +60,7 @@ A simple to use set of database types, and annotations to use postgresql's full 
  * Create your entity
  
  You do not have to create column annotations for your fields that will hold your full text search vectors (tsvector) the columns will be created automatically.
- A TsVector annotation only requires the ```fields``` parameter. There are optional ```weight``` and ```language``` parameters as well, however they are not used yet.
+ A TsVector annotation only requires the ```fields``` parameter. There are optional ```language``` parameters as well.
  You do not need to set data for your TsVector field, the data will come from the fields specified in the ```fields``` property automatically when the object is flushed to the database
  
   ```php
@@ -74,7 +74,7 @@ A simple to use set of database types, and annotations to use postgresql's full 
   
       /**
        * @var TsVector
-       * @TsVector(name="title_fts", fields={"title"})
+       * @TsVector(name="title_fts", fields={"title"="A", "body="C"}) // or simple {"title", "body"} for equals weight
        */
       private $titleFTS;
   	
