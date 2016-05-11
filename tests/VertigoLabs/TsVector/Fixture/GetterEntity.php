@@ -14,10 +14,11 @@ use Doctrine\ORM\Mapping\Id;
 use VertigoLabs\DoctrineFullTextPostgres\ORM\Mapping\TsVector;
 
 /**
+ * Class MissingColumnEntity
  * @package VertigoLabs\TsVector\Fixture
  * @Entity()
  */
-class WrongColumnTypeEntity
+class GetterEntity
 {
     /**
      * @var integer
@@ -25,14 +26,14 @@ class WrongColumnTypeEntity
      * @Column(name="id", type="integer", nullable=false)
      */
     private $id;
-
+    
     /**
-     * @Column(type="integer", nullable=true)
+     * @TsVector(fields={"calculateColumn"})
      */
-    private $wrongColumnType;
+    private $missingColumnFTS;
 
-    /**
-     * @TsVector(fields={"wrongColumnType"})
-     */
-    private $wrongColumnTypeFTS;
+    public function getCalculateColumn()
+    {
+        
+    }
 }

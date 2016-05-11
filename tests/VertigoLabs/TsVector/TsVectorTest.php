@@ -12,11 +12,11 @@ use Doctrine\Common\Annotations\AnnotationReader;
 use Doctrine\Common\EventManager;
 use Base\BaseORMTestCase;
 use TsVector\Fixture\FullAnnotationsEntity;
+use TsVector\Fixture\GetterEntity;
 use VertigoLabs\DoctrineFullTextPostgres\Common\TsVectorSubscriber;
 use TsVector\Fixture\Article;
 use TsVector\Fixture\DefaultAnnotationsEntity;
 use TsVector\Fixture\MissingColumnEntity;
-use TsVector\Fixture\WrongColumnTypeEntity;
 
 class TsVectorTest extends BaseORMTestCase
 {
@@ -84,12 +84,10 @@ class TsVectorTest extends BaseORMTestCase
 
     /**
      * @test
-     * @expectedException \Doctrine\Common\Annotations\AnnotationException
-     * @expectedExceptionMessage TsVector\Fixture\WrongColumnTypeEntity::wrongColumnType TsVector field can only be assigned to String and Text columns. TsVector\Fixture\WrongColumnTypeEntity::wrongColumnType has the type integer
      */
-    public function mustHaveCorrectColumnType()
+    public function mustHaveGetter()
     {
-        $metaData = $this->em->getClassMetadata(WrongColumnTypeEntity::class);
+        $metaData = $this->em->getClassMetadata(GetterEntity::class);
     }
 
     /**

@@ -82,7 +82,6 @@ class TsVectorSubscriber implements EventSubscriber
                 'columnName' => $this->getColumnName($prop, $annotation),
                 'type' => 'tsvector',
                 'language' => strtolower($annotation->language),
-                'nullable' => $this->isWatchFieldNullable($class, $annotation),
                 'fields' => $annotation->fields
             ]);
         }
@@ -129,11 +128,11 @@ class TsVectorSubscriber implements EventSubscriber
                     $parameters[] = $weight;
                 }
             }
-            
+
             $query = 'SELECT ' . implode($fields, " || ' ' || ");
             $result = $connection->executeQuery($query, $parameters);
             $tsVector = $result->fetchColumn();
-            
+
             $accessor->setValue($entity, $prop, $tsVector);
         }
     }
@@ -150,30 +149,10 @@ class TsVectorSubscriber implements EventSubscriber
     private function checkWatchFields(\ReflectionClass $class, TsVector $annotation)
     {
         foreach ($annotation->fields as $fieldName => $weight) {
-            if (!$class->hasProperty($fieldName)) {
+            if (!$class->hasProperty($fieldName) && !$class->hasMethod('get' . ucfirst($fieldName))) {
                 throw new MappingException(sprintf('Class does not contain %s property', $fieldName));
             }
-            $property = $class->getProperty($fieldName);
-            /** @var Column $propAnnot */
-            $propAnnot = $this->reader->getPropertyAnnotation($property, Column::class);
-            if (!in_array($propAnnot->type, ['string', 'text'])) {
-                throw new AnnotationException(sprintf('%s::%s TsVector field can only be assigned to String and Text columns. %s::%s has the type %s',
-                    $class->getName(), $fieldName, $class->getName(), $property->getName(), $propAnnot->type));
-            }
         }
-    }
-
-    private function isWatchFieldNullable(\ReflectionClass $class, TsVector $annotation)
-    {
-        foreach ($annotation->fields as $fieldName => $weight) {
-            $property = $class->getProperty($fieldName);
-            /** @var Column $propAnnot */
-            $propAnnot = $this->reader->getPropertyAnnotation($property, Column::class);
-            if ($propAnnot->nullable === false) {
-                return false;
-            }
-        }
-        return true;
     }
 
     private function normalizeFields($fields, $defaultWeight = 'A')
