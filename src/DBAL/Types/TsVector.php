@@ -31,45 +31,7 @@ class TsVector extends Type
     {
         return 'tsvector';
     }
-
-    public function canRequireSQLConversion()
-    {
-        return true;
-    }
-
-    /**
-     * Converts a value from its database representation to its PHP representation
-     * of this type.
-     *
-     * @param mixed $value The value to convert.
-     * @param \Doctrine\DBAL\Platforms\AbstractPlatform $platform The currently used database platform.
-     *
-     * @return mixed The PHP representation of the value.
-     */
-    public function convertToPHPValue($value, AbstractPlatform $platform)
-    {
-        return $value;
-    }
-
-    /**
-     * Converts a value from its PHP representation to its database representation
-     * of this type.
-     *
-     * @param mixed $value The value to convert.
-     * @param \Doctrine\DBAL\Platforms\AbstractPlatform $platform The currently used database platform.
-     *
-     * @return mixed The database representation of the value.
-     */
-    public function convertToDatabaseValueSQL($sqlExp, AbstractPlatform $platform)
-    {
-        return sprintf("to_tsvector('english', ?)", $sqlExp);
-    }
-
-    public function convertToDatabaseValue($value, AbstractPlatform $platform)
-    {
-        return $value['data'];
-    }
-
+    
     /**
      * Gets the name of this type.
      *

@@ -75,12 +75,12 @@ class TsVectorSubscriber implements EventSubscriber
             if (is_null($annotation)) {
                 continue;
             }
+            $annotation->fields = $this->normalizeFields($annotation->fields);
             $this->checkWatchFields($class, $annotation);
             $metaData->mapField([
                 'fieldName' => $prop->getName(),
                 'columnName' => $this->getColumnName($prop, $annotation),
                 'type' => 'tsvector',
-                'weight' => strtoupper($annotation->weight),
                 'language' => strtolower($annotation->language),
                 'nullable' => $this->isWatchFieldNullable($class, $annotation),
                 'fields' => $annotation->fields
@@ -113,22 +113,28 @@ class TsVectorSubscriber implements EventSubscriber
             }
 
             if ($args instanceof PreUpdateEventArgs) {
-                $changedFields = array_keys($args->getEntityChangeSet());
-                if (!array_intersect($field['fields'], $changedFields)) {
+                if (!array_intersect_key($field['fields'], $args->getEntityChangeSet())) {
                     continue;
                 }
             }
 
-            $tsVectorVal = [];
-            foreach ($field['fields'] as $fieldName) {
-                $tsVectorVal[] = $accessor->getValue($entity, $fieldName);
+            $connection = $args->getEntityManager()->getConnection();
+            $fields = [];
+            $parameters = [];
+            foreach ($field['fields'] as $fieldName => $weight) {
+                $text = $accessor->getValue($entity, $fieldName);
+                if ($text) {
+                    $fields[] = "setweight( coalesce( to_tsvector('ru', ?),''),?)";
+                }                 
+                $parameters[] = $text;
+                $parameters[] = $weight;
             }
-            $value = [
-                'data' => implode(' ', $tsVectorVal),
-                'language' => $field['language'],
-                'weight' => $field['weight']
-            ];
-            $accessor->setValue($entity, $prop, $value);
+            
+            $query = 'SELECT ' . implode($fields, " || ' ' || ");
+            $result = $connection->executeQuery($query, $parameters);
+            $tsVector = $result->fetchColumn();
+            
+            $accessor->setValue($entity, $prop, $tsVector);
         }
     }
 
@@ -143,7 +149,7 @@ class TsVectorSubscriber implements EventSubscriber
 
     private function checkWatchFields(\ReflectionClass $class, TsVector $annotation)
     {
-        foreach ($annotation->fields as $fieldName) {
+        foreach ($annotation->fields as $fieldName => $weight) {
             if (!$class->hasProperty($fieldName)) {
                 throw new MappingException(sprintf('Class does not contain %s property', $fieldName));
             }
@@ -159,7 +165,7 @@ class TsVectorSubscriber implements EventSubscriber
 
     private function isWatchFieldNullable(\ReflectionClass $class, TsVector $annotation)
     {
-        foreach ($annotation->fields as $fieldName) {
+        foreach ($annotation->fields as $fieldName => $weight) {
             $property = $class->getProperty($fieldName);
             /** @var Column $propAnnot */
             $propAnnot = $this->reader->getPropertyAnnotation($property, Column::class);
@@ -168,5 +174,19 @@ class TsVectorSubscriber implements EventSubscriber
             }
         }
         return true;
+    }
+
+    private function normalizeFields($fields, $defaultWeight = 'A')
+    {
+        $normalizedFields = [];
+        foreach ($fields as $key => $field) {
+            if (in_array($field, ['A', 'B', 'C', 'D'])) {
+                $normalizedFields[$key] = $field;
+            } else {
+                $normalizedFields[$field] = $defaultWeight;
+            }
+        }
+
+        return $normalizedFields;
     }
 }

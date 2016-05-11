@@ -33,7 +33,7 @@ class FullAnnotationsEntity
     private $allCustom;
     
     /**
-     * @TsVector(fields={"allCustom"}, name="fts_custom", weight="A", language="french")
+     * @TsVector(fields={"allCustom"}, name="fts_custom", language="french")
      */
     private $allCustomFTS;
 }

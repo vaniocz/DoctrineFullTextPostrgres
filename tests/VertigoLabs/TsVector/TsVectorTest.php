@@ -55,7 +55,6 @@ class TsVectorTest extends BaseORMTestCase
 
         static::assertEquals('allDefaultsFTS', $allDefaultsMetadata['fieldName']);
         static::assertEquals('allDefaultsFTS', $allDefaultsMetadata['columnName']);
-        static::assertEquals('D', $allDefaultsMetadata['weight']);
         static::assertEquals('english', $allDefaultsMetadata['language']);
     }
 
@@ -70,7 +69,6 @@ class TsVectorTest extends BaseORMTestCase
 
         static::assertEquals('allCustomFTS', $allDefaultsMetadata['fieldName']);
         static::assertEquals('fts_custom', $allDefaultsMetadata['columnName']);
-        static::assertEquals('A', $allDefaultsMetadata['weight']);
         static::assertEquals('french', $allDefaultsMetadata['language']);
     }
 

@@ -39,7 +39,7 @@ class Article
 
     /**
      * @var \VertigoLabs\DoctrineFullTextPostgres\DBAL\Types\TsVector
-     * @TsVector(name="title_fts", fields={"title"}, weight="A")
+     * @TsVector(name="title_fts", fields={"title"})
      */
     private $titleFTS;
     
@@ -54,6 +54,12 @@ class Article
      * @TsVector(name="body_fts", fields={"body"})
      */
     private $bodyFTS;
+
+    /**
+     * @var \VertigoLabs\DoctrineFullTextPostgres\DBAL\Types\TsVector
+     * @TsVector(name="full_fts", fields={"title"="A", "body"="D"})
+     */
+    private $fullFTS;
 
     /**
      * @return string
@@ -132,6 +138,26 @@ class Article
     {
         $this->bodyFTS = $bodyFTS;
 
+        return $this;
+    }
+
+    /**
+     * @return \VertigoLabs\DoctrineFullTextPostgres\DBAL\Types\TsVector
+     */
+    public function getFullFTS()
+    {
+        return $this->fullFTS;
+    }
+
+    /**
+     * @param \VertigoLabs\DoctrineFullTextPostgres\DBAL\Types\TsVector $fullFTS
+     *
+     * @return Article
+     */
+    public function setFullFTS($fullFTS)
+    {
+        $this->fullFTS = $fullFTS;
+        
         return $this;
     }
 }
