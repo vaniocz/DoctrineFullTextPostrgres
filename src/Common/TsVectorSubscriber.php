@@ -125,9 +125,9 @@ class TsVectorSubscriber implements EventSubscriber
                 $text = $accessor->getValue($entity, $fieldName);
                 if ($text) {
                     $fields[] = "setweight( coalesce( to_tsvector('ru', ?),''),?)";
-                }                 
-                $parameters[] = $text;
-                $parameters[] = $weight;
+                    $parameters[] = $text;
+                    $parameters[] = $weight;
+                }
             }
             
             $query = 'SELECT ' . implode($fields, " || ' ' || ");
