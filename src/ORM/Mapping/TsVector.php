@@ -36,5 +36,5 @@ final class TsVector extends Annotation
     /**
      * @var string
      */
-    public $language = 'english';
+    public $language = 'en';
 }

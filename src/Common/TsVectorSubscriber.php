@@ -123,7 +123,8 @@ class TsVectorSubscriber implements EventSubscriber
             foreach ($field['fields'] as $fieldName => $weight) {
                 $text = $accessor->getValue($entity, $fieldName);
                 if ($text) {
-                    $fields[] = "setweight( coalesce( to_tsvector('ru', ?),''),?)";
+                    $fields[] = "setweight(coalesce(to_tsvector(?, ?), ''), ?)";
+                    $parameters[] = $field['language'];
                     $parameters[] = $text;
                     $parameters[] = $weight;
                 }
