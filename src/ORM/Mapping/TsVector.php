@@ -21,20 +21,28 @@ final class TsVector extends Annotation
 {
     /**
      * @var array<string>
-     * @Annotation\Required()
+     * @Annotation\Required
      */
-    public $fields = [];
+    public $properties = [];
+
     /**
      * @var string
      */
     public $name;
+
     /**
      * @var string
-     * @Annotation\Enum({'A',"B","C","D"})
+     * @Annotation\Enum({"A", "B", "C", "D"})
      */
     public $weight = 'D';
+
     /**
      * @var string
      */
-    public $language = 'en';
+    public $language = 'english';
+
+    /**
+     * @var string|null
+     */
+    public $languageProperty;
 }

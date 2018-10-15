@@ -56,7 +56,7 @@ abstract class TSFunction extends FunctionNode
             if (is_null($annot)) {
                 continue;
             }
-            if (in_array($this->ftsField->field, $annot->fields)) {
+            if (in_array($this->ftsField->field, $annot->properties)) {
                 $this->ftsField->field = $prop->name;
                 break;
             }

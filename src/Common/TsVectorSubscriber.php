@@ -63,10 +63,10 @@ class TsVectorSubscriber implements EventSubscriber
         ];
     }
 
-    public function loadClassMetadata(LoadClassMetadataEventArgs $eventArgs)
+    public function loadClassMetadata(LoadClassMetadataEventArgs $event)
     {
         /** @var ClassMetadata $metaData */
-        $metaData = $eventArgs->getClassMetadata();
+        $metaData = $event->getClassMetadata();
 
         $class = $metaData->getReflectionClass();
         foreach ($class->getProperties() as $prop) {
@@ -75,14 +75,15 @@ class TsVectorSubscriber implements EventSubscriber
             if (is_null($annotation)) {
                 continue;
             }
-            $annotation->fields = $this->normalizeFields($annotation->fields);
-            $this->checkWatchFields($class, $annotation);
+            $annotation->properties = $this->normalizeProperties($annotation->properties);
+            $this->checkWatchProperties($class, $annotation);
             $metaData->mapField([
                 'fieldName' => $prop->getName(),
-                'columnName' => $this->getColumnName($prop, $annotation),
+                'columnName' => $this->resolveColumnName($prop, $annotation, $event),
                 'type' => 'tsvector',
-                'language' => strtolower($annotation->language),
-                'fields' => $annotation->fields
+                'language' => $annotation->language,
+                'languageProperty' => $annotation->languageProperty,
+                'properties' => $annotation->properties
             ]);
         }
     }
@@ -97,34 +98,47 @@ class TsVectorSubscriber implements EventSubscriber
         $this->preFlush($args);
     }
 
-    private function preFlush(LifecycleEventArgs $args)
+    private function preFlush(LifecycleEventArgs $event)
     {
-        $entity = $args->getObject();
-        $metadata = $args->getObjectManager()->getClassMetadata(get_class($entity));
-
+        $entity = $event->getObject();
+        $metadata = $event->getObjectManager()->getClassMetadata(get_class($entity));
         $accessor = PropertyAccess::createPropertyAccessor();
 
         foreach ($metadata->getFieldNames() as $prop) {
-            $field = $metadata->getFieldMapping($prop);
+            $fieldMapping = $metadata->getFieldMapping($prop);
 
-            if ($field['type'] !== 'tsvector') {
+            if ($fieldMapping['type'] !== 'tsvector') {
                 continue;
             }
 
-            if ($args instanceof PreUpdateEventArgs) {
-                if (!array_intersect_key($field['fields'], $args->getEntityChangeSet())) {
+            if ($event instanceof PreUpdateEventArgs) {
+                if (!array_intersect_key($fieldMapping['properties'], $event->getEntityChangeSet())) {
                     continue;
                 }
             }
 
-            $connection = $args->getEntityManager()->getConnection();
+            $connection = $event->getEntityManager()->getConnection();
             $fields = [];
             $parameters = [];
-            foreach ($field['fields'] as $fieldName => $weight) {
-                $text = $accessor->getValue($entity, $fieldName);
-                if ($text) {
+
+            foreach ($fieldMapping['properties'] as $property => $weight) {
+                $texts = $accessor->getValue($entity, $property);
+
+                if (!is_array($texts) && !$texts instanceof \Traversable) {
+                    $texts = [$texts => $weight];
+                }
+
+                foreach ($texts as $text => $weight) {
+                    if ($text === null || $text === '') {
+                        continue;
+                    }
+
+                    $language = $fieldMapping['languageProperty'] === null
+                        ? $fieldMapping['language']
+                        : $accessor->getValue($entity, $fieldMapping['languageProperty']);
+
                     $fields[] = "setweight(coalesce(to_tsvector(?, ?), ''), ?)";
-                    $parameters[] = $field['language'];
+                    $parameters[] = $language;
                     $parameters[] = $text;
                     $parameters[] = $weight;
                 }
@@ -138,28 +152,35 @@ class TsVectorSubscriber implements EventSubscriber
         }
     }
 
-    private function getColumnName(\ReflectionProperty $property, TsVector $annotation)
-    {
-        $name = $annotation->name;
-        if (is_null($name)) {
-            $name = $property->getName();
+    private function resolveColumnName(
+        \ReflectionProperty $property,
+        TsVector $annotation,
+        LoadClassMetadataEventArgs $event
+    ) {
+        if ($annotation->name === null) {
+            $namingStrategy = $event->getEntityManager()->getConfiguration()->getNamingStrategy();
+
+            return $namingStrategy->propertyToColumnName($property->getName());
+
         }
-        return $name;
+
+        return $annotation->name;
     }
 
-    private function checkWatchFields(\ReflectionClass $class, TsVector $annotation)
+    private function checkWatchProperties(\ReflectionClass $class, TsVector $annotation)
     {
-        foreach ($annotation->fields as $fieldName => $weight) {
+        foreach ($annotation->properties as $fieldName => $weight) {
             if (!$class->hasProperty($fieldName) && !$class->hasMethod('get' . ucfirst($fieldName))) {
                 throw new MappingException(sprintf('Class does not contain %s property', $fieldName));
             }
         }
     }
 
-    private function normalizeFields($fields, $defaultWeight = 'A')
+    private function normalizeProperties($properties, $defaultWeight = 'A')
     {
         $normalizedFields = [];
-        foreach ($fields as $key => $field) {
+
+        foreach ($properties as $key => $field) {
             if (in_array($field, ['A', 'B', 'C', 'D'])) {
                 $normalizedFields[$key] = $field;
             } else {
