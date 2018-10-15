@@ -10,8 +10,8 @@
     "license": "MIT",
     "type": "library",
     "require": {
+        "php": "^7.1",
         "doctrine/orm": "~2.4",
-        "php": ">=5.4",
         "symfony/property-access": "~2.3|~3.0"
     },
     "require-dev": {
