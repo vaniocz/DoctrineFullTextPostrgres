@@ -18,6 +18,7 @@ use Doctrine\DBAL\Types\Type;
  */
 class TsVector extends Type
 {
+    const NAME = 'tsvector';
 
     /**
      * Gets the SQL declaration snippet for a field of this type.
@@ -39,7 +40,7 @@ class TsVector extends Type
      */
     public function getName()
     {
-        return 'tsvector';
+        return self::NAME;
     }
 
     public function getMappedDatabaseTypes(AbstractPlatform $platform)
