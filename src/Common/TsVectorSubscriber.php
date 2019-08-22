@@ -125,7 +125,7 @@ class TsVectorSubscriber implements EventSubscriber
                 $texts = $accessor->getValue($entity, $property);
 
                 if (!is_array($texts) && !$texts instanceof \Traversable) {
-                    $texts = [$texts => $weight];
+                    $texts = [(string) $texts => $weight];
                 }
 
                 foreach ($texts as $text => $weight) {
