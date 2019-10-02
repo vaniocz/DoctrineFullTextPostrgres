@@ -170,7 +170,7 @@ class TsVectorSubscriber implements EventSubscriber
     private function checkWatchProperties(\ReflectionClass $class, TsVector $annotation)
     {
         foreach ($annotation->properties as $fieldName => $weight) {
-            if (!$class->hasProperty($fieldName) && !$class->hasMethod('get' . ucfirst($fieldName))) {
+            if (!$class->hasMethod($fieldName) && !$class->hasMethod('get' . ucfirst($fieldName))) {
                 throw new MappingException(sprintf('Class does not contain %s property', $fieldName));
             }
         }
