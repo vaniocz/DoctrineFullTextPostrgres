@@ -7,6 +7,10 @@ class TsQueryFunction extends TSFunction
 {
     public function getSql(SqlWalker $sqlWalker): string
     {
+        if ($this->queryString instanceof TsQueryFunctionInterface) {
+            return "{$this->ftsField->dispatch($sqlWalker)} @@ ({$this->queryString->dispatch($sqlWalker)})";
+        }
+
         return sprintf(
             '%s @@ to_tsquery(%s, %s)',
             $this->ftsField->dispatch($sqlWalker),
