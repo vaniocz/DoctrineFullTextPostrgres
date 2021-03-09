@@ -144,7 +144,7 @@ class TsVectorSubscriber implements EventSubscriber
                 }
             }
 
-            $query = 'SELECT ' . implode($fields, " || ' ' || ");
+            $query = 'SELECT ' . implode(" || ' ' || ", $fields);
             $result = $connection->executeQuery($query, $parameters);
             $tsVector = $result->fetchColumn();
 
